@@ -282,31 +282,34 @@ namespace BattleshipWebApi.Controllers
         /// <summary>
         /// Creates a ship at the specified origin point
         /// </summary>
-        /// <param name="userID">The ID of the user whose grid is being assigned a ship</param>
-        /// <param name="orientation">The orientation of the ship on the board</param>
-        /// <param name="length">The length of the ship</param>
-        /// <param name="x">The origin point of the ship on the horizontal axis</param>
-        /// <param name="y">The origin point of the ship on the vertical axis</param>
+        /// <param name="assignShip">The parameters of the ship being assigned</param>
         /// <returns></returns>
         [HttpPost]
         [Route("AssignShip")]
-        public string AssignShip(int userID, int orientation, int length, int x, int y)
+        public string AssignShip([FromBody] AssignShip assignShip)
         {
-            int room = int.Parse(GetRoomOfUser(userID, false));
-            int grid = int.Parse(GetGridOfUser(userID));
+            int room = int.Parse(GetRoomOfUser(assignShip.userID, false));
+            int grid = int.Parse(GetGridOfUser(assignShip.userID));
 
-            AssignCell(grid, x, y, 'A');
-            int cell = int.Parse(GetCellIDByCoordinates(x, y, grid));
+            AssignCell assign = new Models.AssignCell();
+            assign.grid = grid;
+            assign.x = assignShip.x;
+            assign.y = assignShip.y;
+            assign.status = 'A';
+
+            AssignCell(assign);
+            int cell = int.Parse(GetCellIDByCoordinates(assignShip.x, assignShip.y, grid));
 
             SqlConnection connection = new SqlConnection(connectionString);
             SqlCommand command = new SqlCommand("usp_addShip", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@UserID", userID);
+            command.Parameters.AddWithValue("@UserID", assignShip.userID);
             command.Parameters.AddWithValue("@RoomID", room);
             command.Parameters.AddWithValue("@GridID", grid);
             command.Parameters.AddWithValue("@CellID", cell);
-            command.Parameters.AddWithValue("@Orientation", orientation);
-            command.Parameters.AddWithValue("@Length", length);
+            command.Parameters.AddWithValue("@Orientation", assignShip.orientation);
+            command.Parameters.AddWithValue("@Length", assignShip.length);
+            command.Parameters.AddWithValue("@status", assignShip.status);
             SqlDataAdapter adapter = new SqlDataAdapter(command);
             DataTable table = new DataTable();
             adapter.Fill(table);
@@ -317,21 +320,18 @@ namespace BattleshipWebApi.Controllers
         /// <summary>
         /// Assigns a status to a certain cell on a certain grid
         /// </summary>
-        /// <param name="grid">The grid on which the cell is being updated</param>
-        /// <param name="x">The horizontal location of the cell</param>
-        /// <param name="y">The vertical location of the cell</param>
-        /// <param name="status">The contents of the cell</param>
+        /// <param name="cell">The grid, location and status of the new cell</param>
         /// <returns></returns>
         [HttpPost]
         [Route("AssignCell")]
-        public string AssignCell(int grid, int x, int y, int status)
+        public string AssignCell([FromBody] AssignCell cell)
         {
             SqlConnection connection = new SqlConnection(connectionString);
             SqlCommand command = new SqlCommand("usp_assignCell", connection);
-            command.Parameters.AddWithValue("@GridID", grid);
-            command.Parameters.AddWithValue("@x", x);
-            command.Parameters.AddWithValue("@y", y);
-            command.Parameters.AddWithValue("@status", status);
+            command.Parameters.AddWithValue("@GridID", cell.grid);
+            command.Parameters.AddWithValue("@x", cell.x);
+            command.Parameters.AddWithValue("@y", cell.y);
+            command.Parameters.AddWithValue("@status", cell.status);
             command.CommandType = CommandType.StoredProcedure;
             connection.Open();
             SqlDataAdapter adapter = new SqlDataAdapter(command);
@@ -365,6 +365,34 @@ namespace BattleshipWebApi.Controllers
         }
 
         /// <summary>
+        /// Gets the coordinates of a cell by its assigned ID
+        /// </summary>
+        /// <param name="cellID">The ID of the cell whose coordinates are being searched for</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("GetCoordinatesByCellID")]
+        public string GetCoordinatesByCellID(int cellID)
+        {
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = new SqlCommand("usp_getCoordinatesByCell", connection);
+            command.Parameters.AddWithValue("@CellID", cellID);
+            command.CommandType = CommandType.StoredProcedure;
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+
+            try
+            {
+                return table.Rows[0][0].ToString() + ", " + table.Rows[0][1].ToString();
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Sends an attack command to a specific coordinate in a specific room
         /// </summary>
         /// <param name="roomID">The ID of the room the attack is coming from; attacker and victim are determined by backend</param>
@@ -394,6 +422,36 @@ namespace BattleshipWebApi.Controllers
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Gets all available rooms for the user to join
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("GetAllAvailableRooms")]
+        public string GetAllAvailableRooms()
+        {
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = new SqlCommand("usp_getAllAvailableRooms", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            string info = "";
+
+            for (int i = 0; i < table.Rows.Count; i++)
+            {
+                info += table.Rows[i][0];
+                info += "-";
+                info += table.Rows[i][1];
+                info += "-";
+                info += table.Rows[i][2];
+                info += "~";
+            }
+
+            return info;
         }
     }
 }

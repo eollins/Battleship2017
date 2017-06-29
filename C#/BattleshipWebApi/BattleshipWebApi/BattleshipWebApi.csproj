@@ -113,6 +113,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\AssignCell.cs" />
+    <Compile Include="Models\AssignShip.cs" />
     <Compile Include="Models\GuestJoin.cs" />
     <Compile Include="Models\HostJoin.cs" />
     <Compile Include="Models\ReadyParameters.cs" />
