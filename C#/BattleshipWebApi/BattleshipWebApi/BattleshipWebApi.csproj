@@ -115,6 +115,7 @@
     </Compile>
     <Compile Include="Models\AssignCell.cs" />
     <Compile Include="Models\AssignShip.cs" />
+    <Compile Include="Models\GetAllAvailableRooms.cs" />
     <Compile Include="Models\GuestJoin.cs" />
     <Compile Include="Models\HostJoin.cs" />
     <Compile Include="Models\ReadyParameters.cs" />

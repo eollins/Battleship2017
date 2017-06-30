@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+    <body>
+        <script src="js/register.js"></script>
+        <script src="js/loadRooms.js"></script>
+        <h1>Rooms</h1>
+        <p id="roomText" style="font-family:Calibri; font-size:20px;" class="listCalibri">Test</p>
+        <br>
+        <div style="display:inline;">
+            <p>Username</p>
+            <input id="joinName" oninput="checkName()" style="font-size: 30px; font-family:Calibri" type="text">
+        </div>
+        <br>
+        <br>
+        <div style="display:inline;">
+            <p>Room Number</p>
+            <input id="roomInput" style="font-size: 30px; font-family:Calibri" type="number">
+            <button id="submitName" disabled="true" onclick="joinRoom()">Join</button>
+        </div>
+    </body>
+</html>

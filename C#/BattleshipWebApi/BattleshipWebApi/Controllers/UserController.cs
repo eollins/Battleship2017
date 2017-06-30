@@ -77,7 +77,7 @@ namespace BattleshipWebApi.Controllers
         ///</summary>
         ///<param name="roomID">The numerical ID of the room in question</param>
         [HttpGet]
-        [Route("GetRoomNameByID")]
+        [Route("GetRoomNameByID/{roomID}")]
         public string GetRoomNameByID(int roomID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -97,7 +97,7 @@ namespace BattleshipWebApi.Controllers
         ///</summary>
         ///<param name="roomName">The name of the room in question</param>
         [HttpGet]
-        [Route("GetRoomIDByName")]
+        [Route("GetRoomIDByName/{roomName}")]
         public string GetRoomIDByName(string roomName)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -117,7 +117,7 @@ namespace BattleshipWebApi.Controllers
         /// </summary>
         /// <param name="userID">The numerical ID of the user in question</param>
         [HttpGet]
-        [Route("GetUsernameByID")]
+        [Route("GetUsernameByID/{userID}")]
         public string GetUsernameByID(int userID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -137,7 +137,7 @@ namespace BattleshipWebApi.Controllers
         /// </summary>
         /// <param name="username">The name of the user in question</param>
         [HttpGet]
-        [Route("GetIDByUsername")]
+        [Route("GetIDByUsername/{username}")]
         public string GetIDByUsername(string username)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -157,7 +157,7 @@ namespace BattleshipWebApi.Controllers
         /// </summary>
         /// <param name="roomID">The ID of the room being checked</param>
         [HttpGet]
-        [Route("GetHost")]
+        [Route("GetHost/{roomID}")]
         public string GetHost(int roomID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -177,7 +177,7 @@ namespace BattleshipWebApi.Controllers
         /// </summary>
         /// <param name="roomID">The ID of the room being checked</param>
         [HttpGet]
-        [Route("GetGuest")]
+        [Route("GetGuest/{roomID}")]
         public string GetGuest(int roomID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -236,8 +236,8 @@ namespace BattleshipWebApi.Controllers
         /// <param name="getName">Returns the room's name if true, ID if false</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetRoomOfUser")]
-        public string GetRoomOfUser(int userID, bool getName)
+        [Route("GetRoomOfUser/{userID}/{getName}")]
+        public string GetRoomOfUser(int userID, string getName)
         {
             SqlConnection connection = new SqlConnection(connectionString);
             SqlCommand command = new SqlCommand("usp_getRoomOfUser", connection);
@@ -248,7 +248,7 @@ namespace BattleshipWebApi.Controllers
             DataTable table = new DataTable();
             adapter.Fill(table);
 
-            if (getName)
+            if (getName == "true")
             {
                 return table.Rows[0][0].ToString();
             }
@@ -264,7 +264,7 @@ namespace BattleshipWebApi.Controllers
         /// <param name="userID">The ID of the user whose grid is being searched for</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetGridOfUser")]
+        [Route("GetGridOfUser/{userID}")]
         public string GetGridOfUser(int userID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -288,7 +288,7 @@ namespace BattleshipWebApi.Controllers
         [Route("AssignShip")]
         public string AssignShip([FromBody] AssignShip assignShip)
         {
-            int room = int.Parse(GetRoomOfUser(assignShip.userID, false));
+            int room = int.Parse(GetRoomOfUser(assignShip.userID, "false"));
             int grid = int.Parse(GetGridOfUser(assignShip.userID));
 
             AssignCell assign = new Models.AssignCell();
@@ -348,7 +348,7 @@ namespace BattleshipWebApi.Controllers
         /// <param name="grid">The grid on which the cell is located</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetCellIDByCoordinates")]
+        [Route("GetCellIDByCoordinates/{x}/{y}/{grid}")]
         public string GetCellIDByCoordinates(int x, int y, int grid)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -370,7 +370,7 @@ namespace BattleshipWebApi.Controllers
         /// <param name="cellID">The ID of the cell whose coordinates are being searched for</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetCoordinatesByCellID")]
+        [Route("GetCoordinatesByCellID/{cellID}")]
         public string GetCoordinatesByCellID(int cellID)
         {
             SqlConnection connection = new SqlConnection(connectionString);
@@ -429,8 +429,8 @@ namespace BattleshipWebApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("GetAllAvailableRooms")]
-        public string GetAllAvailableRooms()
+        [Route("GetAllAvailableRooms/{msg}")]
+        public string GetAllAvailableRooms(string msg)
         {
             SqlConnection connection = new SqlConnection(connectionString);
             SqlCommand command = new SqlCommand("usp_getAllAvailableRooms", connection);
@@ -452,6 +452,90 @@ namespace BattleshipWebApi.Controllers
             }
 
             return info;
+        }
+
+        /// <summary>
+        /// Checks to see if a name has been previously registered
+        /// </summary>
+        /// <param name="name">Name being checked</param>
+        /// <param name="roomname">Room name being checked</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("CheckNameAvailability/{name}/{roomname}")]
+        public string AreParametersAvailable(string name, string roomname)
+        {
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = new SqlCommand("usp_isNameAvailable", connection);
+            command.Parameters.AddWithValue("@ProposedName", name);
+            command.CommandType = CommandType.StoredProcedure;
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+
+            SqlCommand command2 = new SqlCommand("usp_isRoomAvailable", connection);
+            command2.Parameters.AddWithValue("@ProposedRoomName", roomname);
+            command2.CommandType = CommandType.StoredProcedure;
+            SqlDataAdapter adapter2 = new SqlDataAdapter(command2);
+            DataTable table2 = new DataTable();
+            adapter2.Fill(table2);
+
+            connection.Close();
+
+            if ((table.Rows.Count > 0 || table2.Rows.Count > 0) || (table.Rows.Count > 0 && table2.Rows.Count > 0))
+            {
+                return "f";
+            }
+            else
+            {
+                return "t";
+            }
+        }
+
+        /// <summary>
+        /// Verifies the availability of a supplied username
+        /// </summary>
+        /// <param name="name">The name being checked</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("CheckUsernameAvailability/{name}")]
+        public string CheckUsernameAvailability(string name)
+        {
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = new SqlCommand("usp_isNameAvailable", connection);
+            command.Parameters.AddWithValue("@ProposedName", name);
+            command.CommandType = CommandType.StoredProcedure;
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows.Count > 0)
+            {
+                return "f";
+            }
+            else
+            {
+                return "t";
+            }
+        }
+
+        [HttpGet]
+        [Route("DisableRoom/{roomID}")]
+        public string DisableRoom(int roomID)
+        {
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = new SqlCommand("usp_disableRoom", connection);
+            command.Parameters.AddWithValue("@RoomID", roomID);
+            command.CommandType = CommandType.StoredProcedure;
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
         }
     }
 }

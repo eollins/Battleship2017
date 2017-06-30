@@ -1,0 +1,54 @@
+<html>
+    <head>
+        <title>Battleship</title>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+    <body>
+        <script src="js/register.js"></script>
+        <script src="ajax.js"></script>
+
+        <h1>Register</h1>
+        <p>Username</p>
+        <input id="usernameBoxCreate" onkeypress="checkName2()" oninput="checkName2()" type="text">
+        <br>
+        <p>Room Name</p>
+        <input id="roomname" onkeypress="checkName2()" type="text">
+        <br>
+        <br>
+        <div style="display:inline;">
+            <button id="createGame" onclick="createGame()">Create Game</button>
+        </div>
+    </body>
+
+    <script>
+        function checkName2() {
+            var newValue = "";
+            if (roomname.value == "") {
+                newValue = "dsuphiofosddsdsdfsdffd)";
+            }
+            else {
+                newValue = roomname.value;
+            }
+            
+            var request = new XMLHttpRequest();
+            request.open("GET", `http://localhost:52927/api/User/CheckNameAvailability/${usernameBoxCreate.value}/${newValue}`, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.onreadystatechange = () => {
+                if (request.readyState == 4 && request.status >= 200 && request.status < 300) {
+                    if (request.responseText.charAt(1) === "t") {
+                        var element = document.getElementById("createGame");
+                        element.classList.add("visible");
+                        element.classList.remove("invisible");
+                    }
+                    else {
+                        var element = document.getElementById("createGame");
+                        element.classList.add("invisible");
+                        element.classList.remove("visible");
+                    }
+                }
+            };
+
+            request.send();
+        }
+    </script>
+</html>

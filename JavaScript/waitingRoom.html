@@ -1,0 +1,50 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+    <body onload="updateName()">
+        <div style="display:inline;">
+            <p id="roomName" style="font-size: 40px;text-align:center;"></p>
+            <strong><p style="text-align:center;font-family:Calibri;font-size:50px;" id="hostName"></p></strong>
+            <p style="text-align:center;font-family:Calibri;font-size: 40px;">vs</p>
+            <strong><p style="text-align:center;font-family:Calibri;font-size:50px;" id="guestName">Waiting for player</p></strong>
+        </div>
+    </body>
+
+    <script>
+        var userID =localStorage.getItem("currentUser");
+        var roomID =localStorage.getItem("userRoomID");
+                    setInterval(checkForGuest(), 1000);
+        function updateName() {
+
+            var name = localStorage.getItem("currentUser");
+            hostName.innerText = name;
+
+            var username = "";
+            var request = new XMLHttpRequest();
+            request.open("GET", `http://localhost:52927/api/User/GetUsernameByID/${hostName.innerText}`, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.onreadystatechange = () => {
+                if (request.readyState == 4 && request.status >= 200 && request.status < 300) {
+                    msg.innerText = request.responseText.substr(1, request.responseText.length - 2);
+                }
+            };
+
+            roomName.innerText = localStorage.getItem("userRoom");
+            request.send();
+        }
+
+        function checkForGuest() {
+            var request = new XMLHttpRequest();
+            request.open("GET", `http://localhost:52927/api/User/GetGuest/${roomID}`, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.onreadystatechange = () => {
+                if (request.readyState == 4 && request.status >= 200 && request.status < 300) {
+                    guestName.innerText = request.responseText;
+                }
+            };
+
+            request.send();
+        }
+    </script>
+</html>

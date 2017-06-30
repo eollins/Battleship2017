@@ -1,0 +1,41 @@
+h1 {
+    font-family: Calibri;
+}
+
+p {
+    font-family: Calibri;
+}
+
+a {
+    font-family: Calibri;
+    font-size: 25px;
+    color: blue;
+}
+
+button {
+    font-family: Calibri;
+    font-size: 20px;
+}
+
+.join {
+    visibility: hidden;
+}
+
+.visible {
+    visibility: visible;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.bordered {
+    height: 50px;
+    width: 50px;
+    border: 5px solid black;
+    display: inline-block;
+}
+
+.row {
+    
+}
